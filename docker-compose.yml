@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  rust-auth-service:
+    build:
+      context: ./auth
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./auth:/app
+    command: ["cargo", "watch", "-x", "run"]
+
+  go-grpc-service:
+    build:
+      context: ./music
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./music:/app
+    command: ["air", "-c", ".air.toml"]
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    ports:
+      - "2181:2181"
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+
+  mongodb:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo-data:/data/db
